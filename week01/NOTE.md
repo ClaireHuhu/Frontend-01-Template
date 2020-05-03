@@ -28,7 +28,17 @@ css 推荐 css2.1 的语法部分
 
 ## 3.工程体系
 
-todo。。。
+优秀工程师
+- 领域知识（知识体系）
+- 能力 潜力
+- 职业规划
+一切的努力都要通过某些成就来展现出来
+
+职业规划
+You are the owner of your career
+
+职业发展
+成就 成长 晋升
 
 ## 4.权威网站
 https://www.ecma-international.org/
