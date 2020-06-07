@@ -203,7 +203,7 @@ void async function() {
         },
     });
     var response = await re.send();
-    var dom = parser.parseHTML(response);
+    var dom = parser.parseHTML(response.body);
     console.log('-------dom---------');
     console.log(dom);
 }()
