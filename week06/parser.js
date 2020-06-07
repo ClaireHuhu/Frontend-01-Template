@@ -2,10 +2,57 @@ const EOF = Symbol('EOF');
 
 let currentToken = null;
 let currentAttribute = null;
+let currentTextNode = null;
+let stack = [{ type: "document", children: [] }] // 方便提取整个dom树;document.getElementsByTagName('html')[0].parentNode =>document
 
 function emit(token) {
-    if (token.type != 'text') {
-        console.log(token);
+
+    let top = stack[stack.length - 1];
+
+    if (token.type === 'startTag') {
+        let element = { // 创建 元素
+            type: 'element',
+            children: [],
+            attributes: []
+        }
+        element.tagName = token.tagName;
+
+        for (let p in token) {
+            if (p !== 'type' && p !== 'tagName') {
+                element.attributes.push({
+                    name: p,
+                    value: token[p]
+                })
+            }
+        }
+
+        top.children.push(element);
+        element.parent = top;
+
+        if (!token.isSelfClosing) {
+            stack.push(element);
+        }
+
+        currentTextNode = null;
+
+        console.log('push', element)
+    } else if (token.type === 'endTag') {
+        if (top.tagName != token.tagName) {
+            throw new Error("Tag start end doesn't match");
+        } else {
+            console.log('pop', stack.pop())
+        }
+    } else if (token.type == "text") {
+        if (currentTextNode == null) {
+            currentTextNode = {
+                type: "text",
+                content: ""
+            }
+            top.children.push(currentTextNode)
+        }
+        currentTextNode.content += token.content
+            // console.log(top.children)
+
     }
 }
 
@@ -173,7 +220,7 @@ function endTagOpen(c) {
 function selfClosingStartTag(c) {
     if (c === '>' || c === '/') {
         currentToken.isSelfClosing = true;
-        currentToken.type = 'selfClosingTag';
+        // currentToken.type = 'selfClosingTag';
         emit(currentToken);
         return data
     } else if (c === EOF) {
