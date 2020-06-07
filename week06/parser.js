@@ -1,6 +1,7 @@
 const EOF = Symbol('EOF');
 
 let currentToken = null;
+let currentAttribute = null;
 
 function emit(token) {
     if (token.type != 'text') {
@@ -12,22 +13,23 @@ function data(c) {
     if (c === '<') {
         return tagOpen;
     } else if (c === EOF) {
-        // todo emit
+        emit({
+            type: 'EOF'
+        })
         return;
     } else {
+        emit({
+            type: 'text',
+            content: c
+        })
         return data;
     }
 }
 
 function tagOpen(c) {
     if (c === '/') {
-        currentToken = {
-            type: 'endTag',
-            tagName: ''
-        }
         return endTagOpen;
     } else if (c.match(/^[a-zA-Z]$/)) {
-        // todo Create a new start tag token, set its tag name to the empty string
         currentToken = {
             type: 'startTag',
             tagName: ''
@@ -57,20 +59,107 @@ function tagName(c) {
 function beforeAttributeName(c) {
     if (c.match(/^[\n\t\f ]$/)) {
         return beforeAttributeName
-    } else if (c === '=') {
-        return beforeAttributeName
-    } else if (c === '>') {
-        emit(currentToken)
-        return data
-    } else if (c === '/') {
-        return selfClosingStartTag;
+    } else if (c === '/' || c === '>' || c === EOF) {
+        return afterAttributeName(c);
     } else {
-        return beforeAttributeName
+        currentAttribute = {
+            name: '',
+            value: ''
+        }
+        return attributeName(c)
     }
 }
 
+function doubleQuotedAttributeValue(c) {
+    if (c === "\"") {
+        currentToken[currentAttribute.name] = currentAttribute.value;
+        return afterQuotedAttributeValue;
+    } else {
+        currentAttribute.value += c;
+        return doubleQuotedAttributeValue;
+    }
+}
+
+function singleQuotedAttributeValue(c) {
+    if (c === "\'") {
+        currentToken[currentAttribute.name] = currentAttribute.value;
+        return afterQuotedAttributeValue;
+    } else {
+        currentAttribute.value += c;
+        return singleQuotedAttributeValue;
+    }
+}
+
+function afterQuotedAttributeValue(c) {
+    if (c.match(/^[\n\t\f ]$/)) {
+        return beforeAttributeName;
+    } else if (c === '/') {
+        return selfClosingStartTag;
+    } else if (c === '>') {
+        currentToken[currentAttribute.name] = currentAttribute.value;
+        emit(currentToken);
+        return data;
+    }
+}
+
+function UnquotedAttributeValue(c) {
+    if (c.match(/^[\n\t\f ]$/)) {
+        currentToken[currentAttribute.name] = currentAttribute.value;
+        return beforeAttributeName;
+    } else if (c === '/') {
+        currentToken[currentAttribute.name] = currentAttribute.value;
+        return selfClosingStartTag;
+    } else if (c === '>') {
+        currentToken[currentAttribute.name] = currentAttribute.value;
+        emit(currentToken);
+        return data;
+    } else {
+        currentAttribute.value += c;
+        return UnquotedAttributeValue;
+    }
+}
+
+function afterAttributeName(c) {
+    if (c == "/") {
+        return selfClosingStartTag
+    } else {
+        emit(currentToken)
+        return data
+    }
+}
+
+function beforeAttributeValue(c) {
+    if (c.match(/^[\n\t\f ]$/) || c === '/' || c === '>' || c === EOF) {
+        return afterAttributeName(c);
+    } else if (c === "\"") {
+        return doubleQuotedAttributeValue;
+    } else if (c === "\'") {
+        return singleQuotedAttributeValue;
+    } else if (c === '>') {
+
+    } else {
+        return UnquotedAttributeValue(c);
+    }
+}
+
+function attributeName(c) {
+    if (c.match(/^[\n\t\f ]$/) || c === '/' || c === '>' || c === EOF) {
+        return afterAttributeName(c);
+    } else if (c === '=') {
+        return beforeAttributeValue;
+    } else {
+        currentAttribute.name += c;
+        return attributeName;
+    }
+}
+
+
 function endTagOpen(c) {
     if (c.match(/^[a-zA-Z]$/)) {
+        currentToken = {
+            type: 'endTag',
+            tagName: ''
+        }
         return tagName(c);
     } else if (c.match('>')) {
 
