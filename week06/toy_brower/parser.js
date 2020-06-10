@@ -1,9 +1,11 @@
 const EOF = Symbol('EOF');
+const css = require('css');
 
 let currentToken = null;
 let currentAttribute = null;
 let currentTextNode = null;
 let stack = [{ type: "document", children: [] }] // 方便提取整个dom树;document.getElementsByTagName('html')[0].parentNode =>document
+let rules = []; // css rulues
 
 function emit(token) {
 
@@ -26,6 +28,8 @@ function emit(token) {
             }
         }
 
+        computeCSS(element);  // 创建元素后,开始计算该元素的样式
+
         top.children.push(element);
         element.parent = top;
 
@@ -40,7 +44,11 @@ function emit(token) {
         if (top.tagName != token.tagName) {
             throw new Error("Tag start end doesn't match");
         } else {
-            console.log('pop', stack.pop())
+            // 出栈时,保证 属性 已经挂在到 element 上
+            if (top.tagName === 'style') {
+                addCSSRules(top.children[0].content)
+            }
+            stack.pop();            
         }
     } else if (token.type == "text") {
         if (currentTextNode == null) {
@@ -55,6 +63,8 @@ function emit(token) {
 
     }
 }
+
+// -------------------------------- html 解析 --------------------------------------
 
 function data(c) {
     if (c === '<') {
@@ -228,6 +238,46 @@ function selfClosingStartTag(c) {
     } else {
         return beforeAttributeName
     }
+}
+
+// -------------------------------- css 解析---------------------------------------
+function addCSSRules (string) {
+    var ast = css.parse(string);
+    console.log(JSON.stringify(ast));
+    rules.push(...ast.stylesheet.rules);
+}
+
+function computeCSS (element) {
+    const elements = stack.slice().reverse();  // 复制,从当前堆栈中获得 当前元素 及其 父元素
+
+    for(let rule of rules) {
+        let selectors = rule.selectors[0].split(" ").reverse();
+
+        if (!match(selectors[0],element)) {   // 当前的元素 一定匹配 最后的选择器
+            continue;
+        }
+
+        let i = 1;
+        let matched = false;
+        for (let j = 0; j < elements.length ;j ++) {
+            if (match(selectors[i],elements[j])) {
+                i ++;
+            }
+        }
+
+        if(i >= selectors.length) {
+            matched = true;
+        }
+
+        if (matched) { // 匹配成功
+            console.log("Element", element, "matched rule", rule)
+        }
+        
+    }
+}
+
+function match (selector, element) {
+    return true;
 }
 
 module.exports.parseHTML = function(string) {
