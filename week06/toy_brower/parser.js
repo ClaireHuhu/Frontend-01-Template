@@ -269,8 +269,21 @@ function computeCSS (element) {
             matched = true;
         }
 
+        if(!element.computedStyle) {
+            element.computedStyle = {};
+        }
+
         if (matched) { // 匹配成功
-            console.log("Element", element, "matched rule", rule)
+            rule.declarations.forEach(function(item) {
+                if(element.computedStyle[item.property]) {
+                    element.computedStyle[item.property].value = item.value;
+                } else {
+                    element.computedStyle[item.property] = {
+                        value: item.value
+                    }
+                }
+            })
+            console.log("Element", element)
         }
         
     }
@@ -283,12 +296,12 @@ function match (selector, element) {
 
     if (selector[0] === '#') {
         var attr = element.attributes.filter(item =>{return item.name === 'id'})[0];
-        if(attr && attr[0].value === selector.replace('#','')) {
+        if(attr && attr.value === selector.replace('#','')) {
             return true
         }
     } else if (selector[0] === '.') {
         var attr = element.attributes.filter(item =>{return item.name === 'class'})[0];
-        if(attr && (attr[0].value.indexOf(selector.replace('.',''))!= -1)) {
+        if(attr && (attr.value.indexOf(selector.replace('.',''))!= -1)) {
             return true
         }
     } else {
