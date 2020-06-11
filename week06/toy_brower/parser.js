@@ -277,7 +277,26 @@ function computeCSS (element) {
 }
 
 function match (selector, element) {
-    return true;
+    if (!selector || !element.attributes) {
+        return false;
+    }
+
+    if (selector[0] === '#') {
+        var attr = element.attributes.filter(item =>{return item.name === 'id'})[0];
+        if(attr && attr[0].value === selector.replace('#','')) {
+            return true
+        }
+    } else if (selector[0] === '.') {
+        var attr = element.attributes.filter(item =>{return item.name === 'class'})[0];
+        if(attr && (attr[0].value.indexOf(selector.replace('.',''))!= -1)) {
+            return true
+        }
+    } else {
+        if (selector === element.tagName) {
+            return true
+        }
+    }
+    return false
 }
 
 module.exports.parseHTML = function(string) {
