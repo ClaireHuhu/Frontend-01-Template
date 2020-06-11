@@ -269,18 +269,24 @@ function computeCSS (element) {
             matched = true;
         }
 
-        if(!element.computedStyle) {
-            element.computedStyle = {};
-        }
-
+        
         if (matched) { // 匹配成功
+            const sp = specificity(rule.selectors[0]);
+
+            if(!element.computedStyle) {
+                element.computedStyle = {};
+            }
+
             rule.declarations.forEach(function(item) {
-                if(element.computedStyle[item.property]) {
+                if (!element.computedStyle[item.property]) {
+                    element.computedStyle[item.property] = {};
+                }
+                if(!element.computedStyle[item.property].specificity) {
                     element.computedStyle[item.property].value = item.value;
-                } else {
-                    element.computedStyle[item.property] = {
-                        value: item.value
-                    }
+                    element.computedStyle[item.property].specificity = sp;
+                } else if (compare(element.computedStyle[item.property].specificity,sp) < 0){
+                    element.computedStyle[item.property].value = item.value;
+                    element.computedStyle[item.property].specificity = sp;
                 }
             })
             console.log("Element", element)
@@ -310,6 +316,32 @@ function match (selector, element) {
         }
     }
     return false
+}
+
+function specificity(selector) {
+    const sp = [0,0,0,0];
+    var selectorParts  = selector.split(' ');
+    for (let part of selectorParts ) {
+        if (part[0] === '#') {
+            sp[1] += 1
+        } else if (part[0] === '.') {
+            sp[2] += 1
+        } else {
+            sp[3] += 1
+        }
+    }
+
+    return sp;
+}
+
+function compare(sp1,sp2) {
+    if (sp1[1] - sp2[1]) {                // 比较 specificity
+        return sp1[1] - sp2[1]
+    }
+    if (sp1[2] - sp2[2]) {
+        return sp1[1] - sp2[1]
+    }
+    return sp1[3] -sp2[3]
 }
 
 module.exports.parseHTML = function(string) {
