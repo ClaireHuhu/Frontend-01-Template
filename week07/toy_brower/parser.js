@@ -1,5 +1,6 @@
 const EOF = Symbol('EOF');
 const css = require('css');
+const layout = require('./layout.js');
 
 let currentToken = null;
 let currentAttribute = null;
@@ -28,7 +29,7 @@ function emit(token) {
             }
         }
 
-        computeCSS(element);  // 创建元素后,开始计算该元素的样式
+        computeCSS(element); // 创建元素后,开始计算该元素的样式
 
         top.children.push(element);
         element.parent = top;
@@ -48,7 +49,8 @@ function emit(token) {
             if (top.tagName === 'style') {
                 addCSSRules(top.children[0].content)
             }
-            stack.pop();            
+            layout(top); // 出栈时 进行布局
+            stack.pop();
         }
     } else if (token.type == "text") {
         if (currentTextNode == null) {
@@ -241,39 +243,39 @@ function selfClosingStartTag(c) {
 }
 
 // -------------------------------- css 解析---------------------------------------
-function addCSSRules (string) {
+function addCSSRules(string) {
     var ast = css.parse(string);
     console.log(JSON.stringify(ast));
     rules.push(...ast.stylesheet.rules);
 }
 
-function computeCSS (element) {
-    const elements = stack.slice().reverse();  // 复制,从当前堆栈中获得 当前元素 及其 父元素
+function computeCSS(element) {
+    const elements = stack.slice().reverse(); // 复制,从当前堆栈中获得 当前元素 及其 父元素
 
-    for(let rule of rules) {
+    for (let rule of rules) {
         let selectors = rule.selectors[0].split(" ").reverse();
 
-        if (!match(selectors[0],element)) {   // 当前的元素 一定匹配 最后的选择器
+        if (!match(selectors[0], element)) { // 当前的元素 一定匹配 最后的选择器
             continue;
         }
 
         let i = 1;
         let matched = false;
-        for (let j = 0; j < elements.length ;j ++) {
-            if (match(selectors[i],elements[j])) {
-                i ++;
+        for (let j = 0; j < elements.length; j++) {
+            if (match(selectors[i], elements[j])) {
+                i++;
             }
         }
 
-        if(i >= selectors.length) {
+        if (i >= selectors.length) {
             matched = true;
         }
 
-        
+
         if (matched) { // 匹配成功
             const sp = specificity(rule.selectors[0]);
 
-            if(!element.computedStyle) {
+            if (!element.computedStyle) {
                 element.computedStyle = {};
             }
 
@@ -281,33 +283,33 @@ function computeCSS (element) {
                 if (!element.computedStyle[item.property]) {
                     element.computedStyle[item.property] = {};
                 }
-                if(!element.computedStyle[item.property].specificity) {
+                if (!element.computedStyle[item.property].specificity) {
                     element.computedStyle[item.property].value = item.value;
                     element.computedStyle[item.property].specificity = sp;
-                } else if (compare(element.computedStyle[item.property].specificity,sp) < 0){
+                } else if (compare(element.computedStyle[item.property].specificity, sp) < 0) {
                     element.computedStyle[item.property].value = item.value;
                     element.computedStyle[item.property].specificity = sp;
                 }
             })
             console.log("Element", element)
         }
-        
+
     }
 }
 
-function match (selector, element) {
+function match(selector, element) {
     if (!selector || !element.attributes) {
         return false;
     }
 
     if (selector[0] === '#') {
-        var attr = element.attributes.filter(item =>{return item.name === 'id'})[0];
-        if(attr && attr.value === selector.replace('#','')) {
+        var attr = element.attributes.filter(item => { return item.name === 'id' })[0];
+        if (attr && attr.value === selector.replace('#', '')) {
             return true
         }
     } else if (selector[0] === '.') {
-        var attr = element.attributes.filter(item =>{return item.name === 'class'})[0];
-        if(attr && (attr.value.indexOf(selector.replace('.',''))!= -1)) {
+        var attr = element.attributes.filter(item => { return item.name === 'class' })[0];
+        if (attr && (attr.value.indexOf(selector.replace('.', '')) != -1)) {
             return true
         }
     } else {
@@ -319,9 +321,9 @@ function match (selector, element) {
 }
 
 function specificity(selector) {
-    const sp = [0,0,0,0];
-    var selectorParts  = selector.split(' ');
-    for (let part of selectorParts ) {
+    const sp = [0, 0, 0, 0];
+    var selectorParts = selector.split(' ');
+    for (let part of selectorParts) {
         if (part[0] === '#') {
             sp[1] += 1
         } else if (part[0] === '.') {
@@ -334,14 +336,14 @@ function specificity(selector) {
     return sp;
 }
 
-function compare(sp1,sp2) {
-    if (sp1[1] - sp2[1]) {                // 比较 specificity
+function compare(sp1, sp2) {
+    if (sp1[1] - sp2[1]) { // 比较 specificity
         return sp1[1] - sp2[1]
     }
     if (sp1[2] - sp2[2]) {
         return sp1[1] - sp2[1]
     }
-    return sp1[3] -sp2[3]
+    return sp1[3] - sp2[3]
 }
 
 module.exports.parseHTML = function(string) {

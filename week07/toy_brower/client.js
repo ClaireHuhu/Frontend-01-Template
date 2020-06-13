@@ -40,7 +40,7 @@ class Request {
                 })
 
                 connection.on('data', (data) => {
-                    parser.receive(data.toString());
+                    parser.receive(data.toString()); // 将返回的响应传给  ResponseParser ，
                     if (parser.isFinished) {
                         resolve(parser.response);
                     }
@@ -203,7 +203,7 @@ void async function() {
         },
     });
     var response = await re.send();
-    var dom = parser.parseHTML(response.body);
+    var dom = parser.parseHTML(response.body); // 解析之后的响应 body 部分传给 parser
     console.log('-------dom---------');
     console.log(dom);
 }()
