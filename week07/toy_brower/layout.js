@@ -116,9 +116,9 @@ function layout(element) {
         }
         isAutoMainSize = true;
     }
-
-    const flexLine = [];
-    const flexLines = [];
+    // 进入行
+    var flexLine = [];
+    var flexLines = [flexLine];
 
     let mainSpace = style[mainSize];
     let crossSpace = 0;
@@ -132,7 +132,7 @@ function layout(element) {
         }
 
         if (itemStyle.flex) {
-            flexLine.push(item);
+            flexLine.push(item); // mainSpace 不做处理
         } else if (style.flexWrap === 'nowrap' && isAutoMainSize) { // todo
             mainSpace -= itemStyle[mainSize];
             if (itemStyle[crossSize] !== null && itemStyle[crossSize] !== (void 0)) {
@@ -146,9 +146,9 @@ function layout(element) {
             if (mainSpace < itemStyle[mainSize]) {
                 flexLine.mainSpace = mainSpace;
                 flexLine.crossSpace = crossSpace;
-                flexLines.push(flexLine);
                 // 重新创建新的行
-                flexLine = [item];
+                flexLine = [item]; // flexLine 指向新的对象，flexLines里面依然保存的是原来的对象
+                flexLines.push(flexLine);
                 mainSpace = style[mainSize]
                 crossSpace = 0
             } else { // 未超过容器剩余 mainSpace，添加到行 
@@ -162,10 +162,99 @@ function layout(element) {
             mainSpace -= itemStyle[mainSize]
         }
     }
-    // 添加行的mainSpace
+    // 最后一行flexLine 的 mainSpace  和 crossSpace
     flexLine.mainSpace = mainSpace
 
+    if (style.flexWrap === 'nowrap' || isAutoMainSize) {
+        flexLine.crossSpace = (style[crossSize] !== undefined) ? style[crossSize] : crossSpace;
+    } else {
+        flexLine.crossSpace = crossSpace;
+    }
 
+    // 处理每行的剩余空间 对 每个元素进行定位
+    if (mainSpace < 0) { // 最后一行
+        const scale = style[mainSize] / (style[mainSize] - mainSpace);
+        let currentMain = mainBase;
+        for (let i = 0; i < items.length; i++) {
+            const item = items[i];
+            const itemStyle = getStyle(item);
+
+            if (itemStyle.flex) {
+                itemStyle[mainSize] = 0;
+            }
+
+            itemStyle[mainSize] = itemStyle[mainSize] * scale;
+            itemStyle[mainStart] = currentMain;
+            itemStyle[mainEnd] = itemStyle[mainStart] + mainSign * itemStyle[mainSize];
+            currentMain = itemStyle[mainEnd];
+        }
+    } else {
+        flexLines.forEach(function(flexLine) {
+            const mainSpace = flexLine.mainSpace;
+            let flexTotal = 0;
+
+            for (let i = 0; i < flexLine.length; i++) {
+                const item = flexLine[i];
+                const itemStyle = getStyle(item);
+
+                if ((itemStyle.flex !== null) && (itemStyle.flex !== (void 0))) {
+                    flexTotal += itemStyle.flex;
+                    continue
+                }
+            }
+
+            if (flexTotal > 0) {
+                let currentMain = mainBase;
+
+                for (let i = 0; i < flexLine.length; i++) {
+                    const item = flexLine[i];
+                    const itemStyle = getStyle(item);
+
+                    if (itemStyle.flex) {
+                        itemStyle[mainSize] = (mainSpace / flexTotal) * itemStyle.flex;
+                    }
+                    itemStyle[mainStart] = currentMain;
+                    itemStyle[mainEnd] = itemStyle[mainStart] + mainSign * itemStyle[mainSize];
+                    currentMain = itemStyle[mainEnd];
+                }
+            } else {
+                let currentMain, gap;
+                if (style.justifyContent === 'flex-start') {
+                    currentMain = mainBase
+                    gap = 0
+                }
+                if (style.justifyContent === 'flex-end') {
+                    currentMain = mainSpace * mainSign + mainBase
+                    gap = 0
+                }
+                if (style.justifyContent === 'center') {
+                    currentMain = mainSpace / 2 * mainSign + mainBase
+                    gap = 0
+                }
+                if (style.justifyContent === 'space-between') {
+                    gap = mainSpace / (items.length - 1) * mainSign
+                    currentMain = mainBase
+                }
+                if (style.justifyContent === 'space-around') {
+                    gap = mainSpace / items.length * mainSign
+                    currentMain = gap / 2 + mainBase
+                }
+                if (style.justifyContent === 'space-evenly') {
+                    gap = mainSpace / (items.length + 1) * mainSign
+                    currentMain = gap + mainBase
+                }
+
+                for (let i = 0; i < flexLine.length; i++) {
+                    const item = flexLine[i];
+                    const itemStyle = getStyle(item);
+                    itemStyle[mainStart] = currentMain;
+                    itemStyle[mainEnd] = itemStyle[mainStart] + mainSign * itemStyle[mainSize];
+                    currentMain = itemStyle[mainEnd] + gap;
+                }
+            }
+
+        })
+    }
 }
 
 module.exports = layout;
