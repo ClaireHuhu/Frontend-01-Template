@@ -252,9 +252,101 @@ function layout(element) {
                     currentMain = itemStyle[mainEnd] + gap;
                 }
             }
-
         })
     }
+
+    // 处理交叉轴
+    if (!style[crossSize]) { // 没有设定值
+        crossSpace = 0
+        style[crossSize] = 0
+        for (let i = 0; i < flexLines.length; i++) {
+            style[crossSize] = style[crossSize] + flexLines[i].crossSpace
+        }
+    } else {
+        crossSpace = style[crossSize]
+        for (let i = 0; i < flexLines.length; i++) {
+            crossSpace -= flexLines[i].crossSpace
+        }
+    }
+
+    if (style.flexWrap === 'wrap-reverse') {
+        crossBase = style[crossSize]
+    } else {
+        crossBase = 0
+    }
+
+    let lineSize = style[crossSize] / flexLines.length
+
+    let gap
+
+    if (style.alignContent === 'flex-start') {
+        crossBase += 0
+        gap = 0
+    }
+    if (style.alignContent === 'flex-end') {
+        crossBase += crossSign * crossSpace
+        gap = 0
+    }
+    if (style.alignContent === 'center') {
+        crossBase += crossSign * crossSpace / 2
+        gap = 0
+    }
+    if (style.alignContent === 'space-between') {
+        crossBase += 0
+        gap = crossSpace / (flexLines.length - 1)
+    }
+    if (style.alignContent === 'space-around') {
+        gap = crossSpace / (flexLines.length)
+        crossBase += crossSign * step / 2
+    }
+    if (style.alignContent === 'stretch') {
+        crossBase += 0
+        gap = 0
+    }
+
+    flexLines.forEach(function(items) {
+        let lineCrossSize = style.alignContent === 'stretch' ? // 拉伸 flex 子项，填满交叉轴
+            items.crossSpace + crossSpace / flexLines.length :
+            items.crossSpace
+
+        for (let i = 0; i < items.length; i++) {
+            const item = items[i]
+            const itemStyle = getStyle(item)
+
+            const align = itemStyle.alignSelf || style.alignItems // align-self指控制单独某一个flex子项的垂直对齐方式
+                // align-items属性，表示子项们
+
+            if (itemStyle[crossSize] === null) {
+                itemStyle[crossSize] = (align === 'stretch') ?
+                    lineCrossSize : 0
+            }
+
+            if (align === 'flex-start') {
+                itemStyle[crossStart] = crossBase
+                itemStyle[crossEnd] = itemStyle[crossStart] + crossSign * itemStyle[crossSize]
+            }
+
+            if (align === 'flex-end') {
+                itemStyle[crossEnd] = crossBase + crossSign * lineCrossSize
+                itemStyle[crossStart] = itemStyle[crossEnd] - crossSign * itemStyle[crossSize]
+            }
+
+            if (align === 'center') {
+                itemStyle[crossStart] = crossBase + crossSign * (lineCrossSize - itemStyle[crossSize]) / 2
+                itemStyle[crossEnd] = itemStyle[crossStart] + crossSign * itemStyle[crossSize]
+            }
+
+            if (align === 'stretch') {
+                itemStyle[crossStart] = crossBase
+                itemStyle[crossEnd] = crossBase + crossSign * ((itemStyle[crossSize] !== null && itemStyle[crossSize] !== (void 0)) ?
+                    itemStyle[crossSize] : lineCrossSize)
+
+                itemStyle[crossSize] = crossSign * (itemStyle[crossEnd] - itemStyle[crossStart])
+            }
+        }
+        crossBase += crossSign * (lineCrossSize + gap)
+    })
+
 }
 
 module.exports = layout;
