@@ -28,7 +28,7 @@ function layout(element) {
     if (style.display != 'flex')
         return;
 
-    const items = element.children.filter(e => e.type == 'element');
+    const items = element.children.filter(e => e.type == 'element'); // 容器中的元素
     items.sort(function(a, b) {
         return (a.order || 0) - (b.order || 0) // order 会改变顺序
     })
@@ -96,7 +96,7 @@ function layout(element) {
     }
 
     if (style.flexWrap === 'wrap-reverse') {
-        let tem = crossStart; // 交换纵轴start 和 end
+        let tem = crossStart; // 交换纵轴crossStart 和 crossEnd
         crossStart = crossEnd;
         crossEnd = tem;
         crossSign = -1;
@@ -104,6 +104,67 @@ function layout(element) {
         crossBase = 0;
         crossSign = +1;
     }
+
+    let isAutoMainSize = false; // 容器 没有设置 【mainSize】，容器中子元素的和
+    if (!style[mainSize]) {
+        style[mainSize] = 0;
+        for (let i = 0; i < items.length; i++) {
+            let itemStyle = getStyle(items[i]);
+            if (itemStyle[mainSize] !== null || itemStyle[mainSize] !== (void 0)) {
+                style[mainSize] += itemStyle[mainSize]
+            }
+        }
+        isAutoMainSize = true;
+    }
+
+    const flexLine = [];
+    const flexLines = [];
+
+    let mainSpace = style[mainSize];
+    let crossSpace = 0;
+
+    for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        const itemStyle = getStyle(item);
+
+        if (itemStyle[mainSize] === null) {
+            itemStyle[mainSize] = 0;
+        }
+
+        if (itemStyle.flex) {
+            flexLine.push(item);
+        } else if (style.flexWrap === 'nowrap' && isAutoMainSize) { // todo
+            mainSpace -= itemStyle[mainSize];
+            if (itemStyle[crossSize] !== null && itemStyle[crossSize] !== (void 0)) {
+                crossSpace = Math.max(crossSpace, itemStyle[crossSize]);
+            }
+            flexLine.push(item);
+        } else {
+            if (itemStyle[mainSize] > style[mainSize]) {
+                itemStyle[mainSize] = style[mainSize];
+            }
+            if (mainSpace < itemStyle[mainSize]) {
+                flexLine.mainSpace = mainSpace;
+                flexLine.crossSpace = crossSpace;
+                flexLines.push(flexLine);
+                // 重新创建新的行
+                flexLine = [item];
+                mainSpace = style[mainSize]
+                crossSpace = 0
+            } else { // 未超过容器剩余 mainSpace，添加到行 
+                flexLine.push(item)
+            }
+            // 处理交叉轴，只需要取 flex 子项最大 crossSize
+            if (itemStyle[crossSize] !== null && itemStyle[crossSize] !== (void 0)) {
+                crossSpace = Math.max(crossSpace, itemStyle[crossSize])
+            }
+            // 容器剩余 mainSpace
+            mainSpace -= itemStyle[mainSize]
+        }
+    }
+    // 添加行的mainSpace
+    flexLine.mainSpace = mainSpace
+
 
 }
 
