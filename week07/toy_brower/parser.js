@@ -357,4 +357,5 @@ module.exports.parseHTML = function(string) {
 
     state = state(EOF); //用Symbol标示结束，将状态机置为结束状态，避免状态机还处于等待状态
 
+    return stack[0];
 }

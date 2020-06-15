@@ -1,22 +1,23 @@
 function getStyle(element) {
     if (!element.style) {
         element.style = {};
-    }
+        for (let prop in element.computedStyle) {
+            element.style[prop] = element.computedStyle[prop].value;
 
-    for (let prop in element.computedStyle) {
-        element.style[prop] = element.computedStyle[prop].value;
+            // 处理 属性值 转为 数字
+            if (element.style[prop].toString().match(/px$/)) {
+                element.style[prop] = parseInt(element.style[prop].replace("px", ''));
+            }
 
-        // 处理 属性值 转为 数字
-        if (element.style[prop].toString().match(/px$/)) {
-            element.style[prop] = parseInt(element.style[prop].replace("px", ''));
+            if (element.style[prop].toString().match(/^[0-9\.]+$/)) {
+                element.style[prop] = parseInt(element.style[prop]);
+            }
+
         }
-
-        if (element.style[prop].toString().match(/^[0-9\.]+$/)) {
-            element.style[prop] = parseInt(element.style[prop]);
-        }
-
     }
-
+    console.log('------');
+    console.log(element.attributes[0].value);
+    console.log(element.style)
     return element.style
 }
 
@@ -33,7 +34,8 @@ function layout(element) {
         return (a.order || 0) - (b.order || 0) // order 会改变顺序
     })
 
-    ['width', 'height'].forEach(item => {
+    var sizeArr = ['width', 'height'];
+    sizeArr.forEach(item => {
         if (style[item] === 'auto' || style[item] === '') {
             style[item] = null
         }
@@ -43,7 +45,7 @@ function layout(element) {
         style.flexDirection = 'row'
     }
     if (!style.alignItems || style.alignItems === 'auto') {
-        style.alignItems = 'strech'
+        style.alignItems = 'stretch'
     }
     if (!style.justifyContent || style.justifyContent === 'auto') {
         style.justifyContent = 'flex-start'
@@ -52,13 +54,13 @@ function layout(element) {
         style.flexWrap = 'nowrap'
     }
     if (!style.alignContent || style.alignContent === 'auto') {
-        style.alignContent = 'center'
+        style.alignContent = 'stretch'
     }
 
     // main 主轴  cross 交叉轴
     let mainSize, mainStart, mainEnd, mainSign, mainBase, crossSize, crossStart, crossEnd, crossSign, crossBase;
     if (style.flexDirection == 'row') {
-        mainSign = 'width';
+        mainSize = 'width';
         mainStart = 'left';
         mainEnd = 'right';
         mainSign = +1; // +1 / -1 标示符号，可以用于乘法
@@ -67,7 +69,7 @@ function layout(element) {
         crossStart = 'top';
         crossEnd = 'bottom';
     } else if (style.flexDirection == 'row-reverse') {
-        mainSign = 'width';
+        mainSize = 'width';
         mainStart = 'right'; // reverse
         mainEnd = 'left'; // reverse
         mainSign = -1; // reverse
@@ -76,7 +78,7 @@ function layout(element) {
         crossStart = 'top';
         crossEnd = 'bottom';
     } else if (style.flexDirection == 'column') {
-        mainSign = 'height';
+        mainSize = 'height';
         mainStart = 'top';
         mainEnd = 'bottom';
         mainSign = +1;
@@ -85,7 +87,7 @@ function layout(element) {
         crossStart = 'left';
         crossEnd = 'right';
     } else if (style.flexDirection == 'column-reverse') {
-        mainSign = 'height';
+        mainSize = 'height';
         mainStart = 'bottom';
         mainEnd = 'top';
         mainSign = -1;
@@ -316,7 +318,7 @@ function layout(element) {
             const align = itemStyle.alignSelf || style.alignItems // align-self指控制单独某一个flex子项的垂直对齐方式
                 // align-items属性，表示子项们
 
-            if (itemStyle[crossSize] === null) {
+            if (itemStyle[crossSize] === null || itemStyle[crossSize] === (void 0)) {
                 itemStyle[crossSize] = (align === 'stretch') ?
                     lineCrossSize : 0
             }

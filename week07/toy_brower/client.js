@@ -1,5 +1,7 @@
 const net = require('net');
 const parser = require('./parser.js');
+const render = require('./render.js');
+const images = require("images");
 
 class Request {
     constructor(options) {
@@ -204,6 +206,12 @@ void async function() {
     });
     var response = await re.send();
     var dom = parser.parseHTML(response.body); // 解析之后的响应 body 部分传给 parser
+
+    // render成图片
+    let viewport = images(800, 600);
+    let divDom = dom.children[0].children[2].children[1].children[3];
+    render(viewport, divDom)
+    viewport.save("viewport.jpg");
     console.log('-------dom---------');
     console.log(dom);
 }()
