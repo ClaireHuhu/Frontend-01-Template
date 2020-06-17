@@ -209,7 +209,7 @@ void async function() {
 
     // render成图片
     let viewport = images(800, 600);
-    let divDom = dom.children[0].children[2].children[1].children[3];
+    let divDom = dom.children[0].children[2].children[1];
     render(viewport, divDom)
     viewport.save("viewport.jpg");
     console.log('-------dom---------');
