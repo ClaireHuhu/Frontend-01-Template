@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <div id='id'>
+        <div class="cls">
+            <span>
+            </span>
+            <img src='xx.png' id='target'></i>
+        </div>
+    </div>
+</body>
+<script>
+    function isSame(element, rule) {
+        if (rule[0] === '#') { // #id
+            return element.id === rule.replace('#', '');
+        } else if (rule[0] === '.') { // .cls
+            let classNameArr = element.className.split(' ');
+            return classNameArr.indexOf(rule.replace('.', '')) !== -1;
+        } else if (rule[0] === '[') { // [attr]
+            let attrName = rule.replace(/[\[\]]/g, '');
+            return element.hasAttribute(attrName);
+        } else { // tag
+            return element.tagName === rule.toUpperCase();
+        }
+    }
+
+    function findCandidateEleList(ele, sign) {
+        if (sign == '>') {
+            return [ele.parentElement]
+        } else if (sign == '+') {
+            return [ele.previousElementSibling]
+        } else if (sign == '~') {
+            let res = [];
+            let tem = ele.previousElementSibling;
+            while (tem) {
+                res.push(tem);
+                tem = tem.previousElementSibling;
+            }
+            return res;
+        } else if (sign == ' ') {
+            let res = [];
+            let tem = ele.parentElement;
+            while (tem && tem.tagName !== 'BODY') {
+                res.push(tem);
+                tem = tem.parentElement;
+            }
+            return res;
+        }
+    }
+
+    function match(element, rule) {
+        // 零宽度正预测先行断言
+        // 零宽度正回顾后发断言  https://deerchao.cn/tutorials/regex/regex.htm#lookaround
+        // split 断言正则进行分割
+        const selectorArr = rule.trim().replace(/(?<=[>+~])\s+/g, '').replace(/\s+(?=[>+~])/g, '').split(/(?<=[ >+~])/g);
+        if (!isSame(element, selectorArr.pop())) {
+            return false;
+        }
+        let eleList = [element];
+        while (eleList.length && selectorArr.length) {
+            let candidateEleList = [];
+            let tem = selectorArr.pop();
+            let sign = tem[tem.length - 1];
+            let selector = tem.slice(0, tem.length - 1);
+
+            eleList.forEach(function(ele) {
+                candidateEleList = candidateEleList.concat(findCandidateEleList(ele, sign));
+            })
+
+            eleList = candidateEleList.filter(function(candidate) {
+                return isSame(candidate, selector);
+            })
+        }
+        return !!(eleList.length && !selectorArr.length);
+
+    }
+    console.log(match(document.getElementById('target'), '#id > .cls span + [src]'));
+</script>
+
+</html>
