@@ -34,7 +34,7 @@
         [0,0,0]
     ]
     var holder = 2;
-    
+
     function show() {
         var container = document.getElementById('board');
         container.innerText = '';
@@ -54,8 +54,64 @@
         if(pattern[y][x]) return;
 
         pattern[y][x] = holder;
-        holder = 3 - holder;
         show();
+
+        if(moveComputer(x,y,holder)){
+            setTimeout(function(){
+                alert(holder + 'win')
+            },0)
+        };
+
+        holder = 3 - holder;
+    }
+    function moveComputer(x,y,holder) {
+        let win = false;
+
+        for(let i = 0; i < 3; i++) {
+            let win = true;
+            for(let j = 0; j < 3; j++) {
+                if(pattern[i][j] !== holder) {
+                    win = false;
+                    break;
+                }
+            }
+            if(win) return win;
+        }
+    
+        for(let i = 0; i < 3; i++) {
+            let win = true;
+            for(let j = 0; j < 3; j++) {
+                if(pattern[j][i] !== holder) {
+                    win = false;
+                    break;
+                }
+            }
+            if(win) return win;
+        }
+
+        {
+            let win = true;
+            for(let j = 0; j < 3; j++) {
+                if(pattern[j][j] !== holder) {
+                    win = false;
+                    break;
+                }
+            }
+            if(win) return win;
+        }
+
+        {
+            let win = true;
+            for(let j = 0; j < 3; j++) {
+                if(pattern[j][2-j] !== holder) {
+                    win = false;
+                    break;
+                }
+            }
+            if(win) return win;
+        }
+
+        return win;
     }
     show()
     </script>
