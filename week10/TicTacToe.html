@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<style>
+    #board{
+        width: 350px;
+    }
+    .cell {
+        display: inline-block;
+        width: 100px;
+        height: 100px;
+        line-height: 100px;
+        font-size: 50px;
+        vertical-align: middle;
+        background: green;
+        color: red;
+        font-weight: bolder;
+        text-align: center;
+        border: 5px solid #fff;
+    }
+</style>
+<body>
+    <div id='board'></div>    
+</body>
+<script>
+    var pattern  = [
+        [0,1,0],
+        [0,2,0],
+        [0,0,0]
+    ]
+    function show() {
+        var container = document.getElementById('board');
+        
+        for(let i = 0;i < 3;i ++) {
+            for(let j = 0;j < 3; j++) {
+                let cell = document.createElement('div');
+                cell.className = 'cell';
+                cell.innerText = 'X';
+                container.appendChild(cell);
+            }
+            container.appendChild(document.createElement('br'));
+        }
+    }
+    show()
+</script>
+</html>
