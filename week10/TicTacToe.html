@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-<style>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Document</title>
+    </head>
+    <style>
     #board{
         width: 350px;
     }
@@ -21,30 +21,42 @@
         font-weight: bolder;
         text-align: center;
         border: 5px solid #fff;
+        user-select:none;
     }
-</style>
-<body>
-    <div id='board'></div>    
-</body>
-<script>
+    </style>
+    <body>
+        <div id="board"></div>
+    </body>
+    <script>
     var pattern  = [
-        [0,1,0],
-        [0,2,0],
+        [0,0,0],
+        [0,0,0],
         [0,0,0]
     ]
+    var holder = 2;
+    
     function show() {
         var container = document.getElementById('board');
+        container.innerText = '';
         
         for(let i = 0;i < 3;i ++) {
             for(let j = 0;j < 3; j++) {
                 let cell = document.createElement('div');
                 cell.className = 'cell';
-                cell.innerText = 'X';
+                cell.innerText = pattern[i][j] === 2 ? 'X' : pattern[i][j] === 1 ? 'O':'';
+                cell.addEventListener('click',()=>move(j,i))
                 container.appendChild(cell);
             }
             container.appendChild(document.createElement('br'));
         }
     }
+    function move(x,y) {
+        if(pattern[y][x]) return;
+
+        pattern[y][x] = holder;
+        holder = 3 - holder;
+        show();
+    }
     show()
-</script>
+    </script>
 </html>
