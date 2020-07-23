@@ -57,12 +57,14 @@
         show(pattern);
 
         if(check(pattern,holder)){
-            setTimeout(function(){
-                alert(holder === 2 ?'X':'O' + 'win')
-            },0)
+            alert((holder === 2 ?'X':'O') + ' win')
         };
 
         holder = 3 - holder;
+        
+        if(willWin(pattern,holder)){
+            console.log((holder === 2?'X':'O') + ' will Win')
+        }
     }
     function check(pattern,holder) {
         for(let i = 0; i < 3; i++) {
@@ -109,6 +111,25 @@
             if(win) return win;
         }
 
+        return false;
+    }
+    
+    function clone (obj) {
+      return JSON.parse(JSON.stringify(obj))
+    }
+
+    function willWin(pattern,holder) {
+        for(let i = 0; i < 3; i++) {
+            for(let j = 0; j < 3; j++) {
+                if(!pattern[i][j]) {
+                    let tem = clone(pattern);
+                    tem[i][j] = holder;
+                    if (check(tem, holder)) {
+                        return true;
+                    }
+                }
+            }
+        }
         return false;
     }
     show(pattern)
