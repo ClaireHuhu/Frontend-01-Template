@@ -44,13 +44,13 @@
                 let cell = document.createElement('div');
                 cell.className = 'cell';
                 cell.innerText = pattern[i][j] === 2 ? 'X' : pattern[i][j] === 1 ? 'O':'';
-                cell.addEventListener('click',()=>move(j,i,pattern))
+                cell.addEventListener('click',()=>userMove(j,i,pattern))
                 container.appendChild(cell);
             }
             container.appendChild(document.createElement('br'));
         }
     }
-    function move(x,y,pattern) {
+    function userMove(x,y,pattern) {
         if(pattern[y][x]) return;
 
         pattern[y][x] = holder;
@@ -61,11 +61,57 @@
         };
 
         holder = 3 - holder;
-        
-        if(willWin(pattern,holder)){
-            console.log((holder === 2?'X':'O') + ' will Win')
+        setTimeout(function(){
+            computerMove(pattern)
+        },100)
+    }
+
+    function computerMove(pattern) {
+        let choice = bestChoice(pattern, holder);
+        if(choice.point) {
+            pattern[choice.point[1]][choice.point[0]] = holder;
+            show(pattern);
+            if(check(pattern,holder)){
+                alert((holder === 2 ?'X':'O') + ' win')
+            };
+            holder = 3 - holder;
         }
     }
+
+    function bestChoice(pattern, holder) {
+        let point = willWin(pattern,holder);
+        if(point) {
+            return {
+                point: point,
+                result: 1
+            }
+        }
+
+        let result = -1;
+        outer:for(let i = 0; i < 3; i++) {
+            for(let j = 0; j < 3; j++) {
+                if (pattern[i][j] !== 0){
+                    continue
+                }
+                let tem = clone(pattern);
+                tem[i][j] = holder;
+                let opp = bestChoice(tem, 3-holder)
+                if (0 - opp.result >= result) {
+                    point = [j,i];
+                    result = -opp.result;
+                }
+                if(result === 1) {
+                    break outer;
+                }
+            }
+        }
+
+        return {
+            point:point,
+            result:point?result:0
+        }
+    }
+
     function check(pattern,holder) {
         for(let i = 0; i < 3; i++) {
             let win = true;
@@ -125,12 +171,12 @@
                     let tem = clone(pattern);
                     tem[i][j] = holder;
                     if (check(tem, holder)) {
-                        return true;
+                        return [j,i];
                     }
                 }
             }
         }
-        return false;
+        return null;
     }
     show(pattern)
     </script>
