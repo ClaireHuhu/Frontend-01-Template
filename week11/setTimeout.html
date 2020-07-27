@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<style>
+    div {
+        width: 100px;
+        height: 100px;
+        background: grey;
+        display: inline-block;
+        border-radius: 50%;
+        margin: 30px;
+    }
+
+    .green.light {
+        background: green;
+    }
+
+    .yellow.light {
+        background: yellow;
+    }
+
+    .red.light {
+        background: red;
+    }
+</style>
+
+<body>
+    <div class="green"></div>
+    <div class="yellow"></div>
+    <div class="red"></div>
+</body>
+<script>
+    function clear() {
+        let lights = document.getElementsByClassName('light');
+        for (let i = 0; i < lights.length; i++) {
+            lights[i].classList.remove('light');
+        }
+    }
+
+    function green() {
+        clear();
+        document.getElementsByClassName('green')[0].classList.add('light');
+    }
+
+    function red() {
+        clear();
+        document.getElementsByClassName('red')[0].classList.add('light');
+    }
+
+    function yellow() {
+        clear();
+        document.getElementsByClassName('yellow')[0].classList.add('light');
+    }
+
+    function go() {
+        green();
+        setTimeout(function () {
+            yellow();
+            setTimeout(function () {
+                red();
+                setTimeout(function () {
+                    go()
+                }, 1000)
+            }, 500)
+        }, 1000)
+    }
+
+    go();
+</script>
+
+</html>
