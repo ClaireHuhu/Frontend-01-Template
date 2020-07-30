@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Document</title>
+    </head>
+    <style>
+    .cell {
+        display: inline-block;
+        width: 6px;
+        height: 6px;
+        margin: 1px;
+        background-color: grey;
+    }
+
+    #container {
+        width: 800px;
+        line-height: 0px;
+    }
+    </style>
+    <body>
+        <div id="container"></div>
+        <button id="save" onclick="localStorage.map = JSON.stringify(map)">save</button>
+    </body>
+    <script>
+    var map = localStorage.map ? JSON.parse(localStorage.map) : Array(10000).fill(0);
+    var container = document.getElementById("container");
+
+    for (let y = 0; y < 100; y++) {
+        for (let x = 0; x < 100; x++) {
+            let cell = document.createElement('div');
+            cell.classList.add('cell');
+
+            if (map[y * 100 + x] === 1) {
+                cell.style.backgroundColor = 'black';
+            }
+
+            cell.addEventListener('mousemove', function () {
+                if (mouse) {
+                    if (clear) {
+                        cell.style.background = '';
+                        map[y * 100 + x] = 0;
+                    } else {
+                        cell.style.background = 'black';
+                        map[y * 100 + x] = 1;
+                    }
+                }
+            })
+
+            container.append(cell);
+        }
+    }
+
+    var mouse = false;
+    var clear = true;
+
+    document.addEventListener('mousedown', function (e) {
+        mouse = true;
+        clear = (e.which === 3);
+    })
+
+    document.addEventListener('mouseup', function (event) {
+        mouse = false;
+        clear = false;
+    })
+
+    document.addEventListener('contextmenu', e => e.preventDefault())
+
+    async function sleep(time) {
+        return new Promise(function(resolve,reject){
+            setTimeout(resolve,time)
+        })
+    }
+
+    async function findPath(map, start, end) {
+        map = map.slice();
+
+        let stack = [start];
+
+        async function insert([x, y]) {
+            if (map[y * 100 + x] !== 0) return;
+            if (x < 0 || x > 100 || y < 0 || y > 100) return;
+
+            map[y*100 + x] = 2;
+            document.getElementsByClassName('cell')[y*100 + x].style.background = 'yellowgreen';
+            await sleep(30)
+            stack.push([x,y]);
+        }
+
+        while (stack.length) {
+            let [x, y] = stack.shift();
+
+            if(x === end[0] && y === end[1]) {
+                return;
+            }
+
+            await insert([x - 1, y])
+            await insert([x + 1, y])
+            await insert([x, y - 1])
+            await insert([x, y + 1])
+        }
+    }
+    </script>
+</html>
