@@ -78,7 +78,8 @@
     async function findPath(map, start, end) {
         map = map.slice();
 
-        let stack = [start];
+        let stack = [];
+        await insert(start, null);
 
         async function insert([x, y], pre) {
             if (map[y * 100 + x] !== 0) return;
@@ -94,20 +95,27 @@
             let [x, y] = stack.shift();
 
             if (x === end[0] && y === end[1]) {
-                console.log(map)
-                // let item = [x,y]
-                // while(item) {
-                //     document.getElementsByClassName('cell')[item[1] * 100 + item[0]].style.background = 'pink';
-                //     item = map[item[1]*100 + item[0]];                   
-                // }
-                return;
+                let path = [];
+                let item = [x,y];
+                while(item) {
+                    path.push(item);
+                    document.getElementsByClassName('cell')[item[1] * 100 + item[0]].style.background = 'pink';
+                    item = map[item[1]*100 + item[0]];                   
+                }
+                return path;
             }
 
             await insert([x - 1, y], [x, y])
             await insert([x + 1, y], [x, y])
             await insert([x, y - 1], [x, y])
             await insert([x, y + 1], [x, y])
+            
+            await insert([x-1,y-1], [x,y])
+            await insert([x+1,y-1], [x,y])
+            await insert([x-1,y+1], [x,y])
+            await insert([x+1,y+1], [x,y])
         }
+        return null;
     }
 </script>
 
