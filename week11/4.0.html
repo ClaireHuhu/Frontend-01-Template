@@ -14,7 +14,7 @@
         margin: 1px;
         background-color: grey;
     }
-
+    
     #container {
         width: 800px;
         line-height: 0px;
@@ -38,7 +38,7 @@
                 cell.style.backgroundColor = 'black';
             }
 
-            cell.addEventListener('mousemove', function () {
+            cell.addEventListener('mousemove', function() {
                 if (mouse) {
                     if (clear) {
                         cell.style.background = '';
@@ -57,12 +57,12 @@
     var mouse = false;
     var clear = true;
 
-    document.addEventListener('mousedown', function (e) {
+    document.addEventListener('mousedown', function(e) {
         mouse = true;
         clear = (e.which === 3);
     })
 
-    document.addEventListener('mouseup', function (event) {
+    document.addEventListener('mouseup', function(event) {
         mouse = false;
         clear = false;
     })
@@ -70,7 +70,7 @@
     document.addEventListener('contextmenu', e => e.preventDefault())
 
     async function sleep(time) {
-        return new Promise(function (resolve, reject) {
+        return new Promise(function(resolve, reject) {
             setTimeout(resolve, time)
         })
     }
@@ -78,17 +78,22 @@
     async function findPath(map, start, end) {
         map = map.slice();
 
-        let stack = [];
-        await insert(start, null);
+        document.getElementsByClassName('cell')[start[1] * 100 + start[0]].style.background = 'blue';
+        document.getElementsByClassName('cell')[end[1] * 100 + end[0]].style.background = 'red';
+
+        let stack = [start];
+        map[start[1] * 100 + start[0]] = null;
 
         async function insert([x, y], pre) {
             if (map[y * 100 + x] !== 0) return;
             if (x < 0 || x > 100 || y < 0 || y > 100) return;
 
             map[y * 100 + x] = pre;
-            document.getElementsByClassName('cell')[y * 100 + x].style.background = 'yellowgreen';
-            await sleep(3)
+            if (!(x === end[0] && y === end[1])) {
+                document.getElementsByClassName('cell')[y * 100 + x].style.background = 'yellowgreen';
+            }
             stack.push([x, y]);
+            await sleep(3)
         }
 
         while (stack.length) {
@@ -96,11 +101,12 @@
 
             if (x === end[0] && y === end[1]) {
                 let path = [];
-                let item = [x,y];
-                while(item) {
+                let item = map[y * 100 + x];
+                while (item[0] !== start[0] || item[1] !== start[1]) {
                     path.push(item);
                     document.getElementsByClassName('cell')[item[1] * 100 + item[0]].style.background = 'pink';
-                    item = map[item[1]*100 + item[0]];                   
+                    item = map[item[1] * 100 + item[0]];
+                    await sleep(3)
                 }
                 return path;
             }
@@ -109,11 +115,11 @@
             await insert([x + 1, y], [x, y])
             await insert([x, y - 1], [x, y])
             await insert([x, y + 1], [x, y])
-            
-            await insert([x-1,y-1], [x,y])
-            await insert([x+1,y-1], [x,y])
-            await insert([x-1,y+1], [x,y])
-            await insert([x+1,y+1], [x,y])
+
+            await insert([x - 1, y - 1], [x, y])
+            await insert([x + 1, y - 1], [x, y])
+            await insert([x - 1, y + 1], [x, y])
+            await insert([x + 1, y + 1], [x, y])
         }
         return null;
     }
