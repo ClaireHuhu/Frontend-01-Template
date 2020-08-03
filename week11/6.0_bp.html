@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<style>
+    .cell {
+        display: inline-block;
+        width: 6px;
+        height: 6px;
+        margin: 1px;
+        background-color: grey;
+    }
+
+    #container {
+        width: 800px;
+        line-height: 0px;
+    }
+</style>
+
+<body>
+    <div id="container"></div>
+    <button id="save" onclick="localStorage.map = JSON.stringify(map)">save</button>
+</body>
+<script>
+    var map = localStorage.map ? JSON.parse(localStorage.map) : Array(10000).fill(0);
+    var container = document.getElementById("container");
+
+    for (let y = 0; y < 100; y++) {
+        for (let x = 0; x < 100; x++) {
+            let cell = document.createElement('div');
+            cell.classList.add('cell');
+
+            if (map[y * 100 + x] === 1) {
+                cell.style.backgroundColor = 'black';
+            }
+
+            cell.addEventListener('mousemove', function () {
+                if (mouse) {
+                    if (clear) {
+                        cell.style.background = '';
+                        map[y * 100 + x] = 0;
+                    } else {
+                        cell.style.background = 'black';
+                        map[y * 100 + x] = 1;
+                    }
+                }
+            })
+
+            container.append(cell);
+        }
+    }
+
+    var mouse = false;
+    var clear = true;
+
+    document.addEventListener('mousedown', function (e) {
+        mouse = true;
+        clear = (e.which === 3);
+    })
+
+    document.addEventListener('mouseup', function (event) {
+        mouse = false;
+        clear = false;
+    })
+
+    document.addEventListener('contextmenu', e => e.preventDefault())
+
+    class BinaryHeap {
+        constructor(data, compare) {
+            this.data = data;
+            this.compare = compare;
+        }
+        take() {
+            if (!this.data.length) return;
+            let min = this.data[0];
+            let i = 0;
+
+            while (i < this.data.length) {
+                if (i * 2 + 1 >= this.data.length) break;
+                if (i * 2 + 2 >= this.data.length) {
+                    this.data[i] = this.data[i * 2 + 1];
+                    i = i * 2 + 1;
+                    break;
+                };
+
+                if (this.compare(this.data[i * 2 + 1], this.data[i * 2 + 2]) < 0) {
+                    this.data[i] = this.data[i * 2 + 1];
+                    i = i * 2 + 1;
+                } else {
+                    this.data[i] = this.data[i * 2 + 2];
+                    i = i * 2 + 2;
+                }
+            }
+
+            if (i < this.data.length - 1) {
+                this.insertAt(i, this.data.pop()); // 最下面一层，不是最后一个元素空缺，那么需要跟最后一个元素进行交换，相当于插入
+            } else {
+                this.data.pop();
+            }
+
+            return min;
+        }
+        insertAt(i, v) {
+            this.data[i] = v;
+            while (i > 0 &&  this.compare(this.data[Math.floor((i - 1) / 2)], v) > 0) {
+                this.data[i] = this.data[Math.floor((i - 1) / 2)];
+                this.data[Math.floor((i - 1) / 2)] = v;
+                i = Math.floor((i - 1) / 2);
+            }
+        }
+        insert(v) {
+            this.insertAt(this.data.length, v);
+        }
+        get length() {
+            return this.data.length
+        }
+    }
+
+    async function sleep(time) {
+        return new Promise(function (resolve, reject) {
+            setTimeout(resolve, time)
+        })
+    }
+
+    async function findPath(map, start, end) {
+        map = map.slice();
+
+        document.getElementsByClassName('cell')[start[1] * 100 + start[0]].style.background = 'blue';
+        document.getElementsByClassName('cell')[end[1] * 100 + end[0]].style.background = 'red';
+
+        let bh = new BinaryHeap([start],(a, b) => distance(a) - distance(b));
+
+        function distance([x, y]) {
+            return (x - end[0]) ** 2 + (y - end[1]) ** 2
+        }
+
+        map[start[1] * 100 + start[0]] = null;
+
+        async function insert([x, y], pre) {
+            if (map[y * 100 + x] !== 0) return; // todo  允许再次被计算，以具体的距离进行判断
+            if (x < 0 || x > 100 || y < 0 || y > 100) return;
+
+            map[y * 100 + x] = pre;
+            if (!(x === end[0] && y === end[1])) {
+                document.getElementsByClassName('cell')[y * 100 + x].style.background = 'yellowgreen';
+            }
+            bh.insert([x, y]);
+            await sleep(3)
+        }
+
+        while (bh.length) {
+            let [x, y] = bh.take();
+
+            if (x === end[0] && y === end[1]) {
+                let path = [];
+                let item = map[y * 100 + x];
+                while (item[0] !== start[0] || item[1] !== start[1]) {
+                    path.push(item);
+                    document.getElementsByClassName('cell')[item[1] * 100 + item[0]].style.background = 'pink';
+                    item = map[item[1] * 100 + item[0]];
+                    await sleep(3)
+                }
+                return path;
+            }
+
+            await insert([x - 1, y], [x, y])
+            await insert([x + 1, y], [x, y])
+            await insert([x, y - 1], [x, y])
+            await insert([x, y + 1], [x, y])
+            // todo 斜边穿过判断
+            await insert([x - 1, y - 1], [x, y])
+            await insert([x + 1, y - 1], [x, y])
+            await insert([x - 1, y + 1], [x, y])
+            await insert([x + 1, y + 1], [x, y])
+        }
+        return null;
+    }
+</script>
+
+</html>
