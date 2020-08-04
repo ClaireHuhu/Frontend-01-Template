@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .keyword {
+            color: blueviolet;
+        }
+        .whitespace {
+            white-space: pre;
+        }
+        .indentifier {
+            color: orangered;
+        }
+
+        .punctuator {
+            color: grey;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="container"></div>
+</body>
+<script>
+    const container = document.getElementById('container');
+    const source = `
+    function sleep(t) {
+        return new Promise(function(resolve){
+          setTimeout(resolve, t)
+        });
+      }
+    `
+
+    const regexp = /(function|new|return)|([ \t\n\r]+)|([a-zA-Z][a-zA-Z0-9]*)|([\(\)\{\}\,\;])/g;
+    let type = ["keyword", "whitespace", "indentifier", "punctuator"];
+    let token;
+    while (token = regexp.exec(source)) {
+        let text = document.createElement('span');
+        text.textContent = token[0];
+
+        for (i = 1; i < 5; i++) {
+            if (token[i]) {
+                text.classList.add(type[i - 1]);
+                break;
+            }
+        }
+
+        container.appendChild(text);
+    }
+</script>
+
+</html>
