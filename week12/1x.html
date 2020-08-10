@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+</body>
+<script>
+    const source = `34 + 5 -5 * 8 / 3`;
+
+    const regexp = /([0-9\.]+)|([ ]+)|([\r\n]+)|(\+)|(\-)|(\*)|(\/)/g;
+    let dictionary = ["Number", "Whitespace", "LineTerminator", "+", '-', '*', '/'];
+
+    function* tokenize(source) {
+        let res = regexp.exec(source);
+        if (res) {
+
+        }
+    }
+</script>
+
+</html>
