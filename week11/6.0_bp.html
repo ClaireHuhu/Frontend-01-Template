@@ -14,7 +14,7 @@
         margin: 1px;
         background-color: grey;
     }
-
+    
     #container {
         width: 800px;
         line-height: 0px;
@@ -38,7 +38,7 @@
                 cell.style.backgroundColor = 'black';
             }
 
-            cell.addEventListener('mousemove', function () {
+            cell.addEventListener('mousemove', function() {
                 if (mouse) {
                     if (clear) {
                         cell.style.background = '';
@@ -57,12 +57,12 @@
     var mouse = false;
     var clear = true;
 
-    document.addEventListener('mousedown', function (e) {
+    document.addEventListener('mousedown', function(e) {
         mouse = true;
         clear = (e.which === 3);
     })
 
-    document.addEventListener('mouseup', function (event) {
+    document.addEventListener('mouseup', function(event) {
         mouse = false;
         clear = false;
     })
@@ -106,7 +106,7 @@
         }
         insertAt(i, v) {
             this.data[i] = v;
-            while (i > 0 &&  this.compare(this.data[Math.floor((i - 1) / 2)], v) > 0) {
+            while (i > 0 && this.compare(this.data[Math.floor((i - 1) / 2)], v) > 0) {
                 this.data[i] = this.data[Math.floor((i - 1) / 2)];
                 this.data[Math.floor((i - 1) / 2)] = v;
                 i = Math.floor((i - 1) / 2);
@@ -121,18 +121,20 @@
     }
 
     async function sleep(time) {
-        return new Promise(function (resolve, reject) {
+        return new Promise(function(resolve, reject) {
             setTimeout(resolve, time)
         })
     }
 
     async function findPath(map, start, end) {
         map = map.slice();
+        let table = Array(10000).fill(Infinity);
+        table[start[1] * 100 + start[0]] = 0;
 
         document.getElementsByClassName('cell')[start[1] * 100 + start[0]].style.background = 'blue';
         document.getElementsByClassName('cell')[end[1] * 100 + end[0]].style.background = 'red';
 
-        let bh = new BinaryHeap([start],(a, b) => distance(a) - distance(b));
+        let bh = new BinaryHeap([start], (a, b) => distance(a) - distance(b));
 
         function distance([x, y]) {
             return (x - end[0]) ** 2 + (y - end[1]) ** 2
@@ -140,9 +142,12 @@
 
         map[start[1] * 100 + start[0]] = null;
 
-        async function insert([x, y], pre) {
-            if (map[y * 100 + x] !== 0) return; // todo  允许再次被计算，以具体的距离进行判断
+        async function insert([x, y], pre, fromStart) {
+            if (map[y * 100 + x] == 1) return;
             if (x < 0 || x > 100 || y < 0 || y > 100) return;
+
+            if (table[y * 100 + x] <= fromStart) return;
+            table[y * 100 + x] = fromStart;
 
             map[y * 100 + x] = pre;
             if (!(x === end[0] && y === end[1])) {
@@ -167,15 +172,24 @@
                 return path;
             }
 
-            await insert([x - 1, y], [x, y])
-            await insert([x + 1, y], [x, y])
-            await insert([x, y - 1], [x, y])
-            await insert([x, y + 1], [x, y])
-            // todo 斜边穿过判断
-            await insert([x - 1, y - 1], [x, y])
-            await insert([x + 1, y - 1], [x, y])
-            await insert([x - 1, y + 1], [x, y])
-            await insert([x + 1, y + 1], [x, y])
+            let fromStart = table[y * 100 + x];
+            await insert([x - 1, y], [x, y], fromStart + 1)
+            await insert([x + 1, y], [x, y], fromStart + 1)
+            await insert([x, y - 1], [x, y], fromStart + 1)
+            await insert([x, y + 1], [x, y], fromStart + 1)
+
+            if (!(map[(y - 1) * 100 + x] == 1 && map[y * 100 + x - 1] == 1)) {
+                await insert([x - 1, y - 1], [x, y], fromStart + 1.4)
+            }
+            if (!(map[(y - 1) * 100 + x] == 1 && map[y * 100 + x + 1] == 1)) {
+                await insert([x + 1, y - 1], [x, y], fromStart + 1.4)
+            }
+            if (!(map[(y + 1) * 100 + x] == 1 && map[y * 100 + x - 1] == 1)) {
+                await insert([x - 1, y + 1], [x, y], fromStart + 1.4)
+            }
+            if (!(map[(y + 1) * 100 + x] == 1 && map[y * 100 + x + 1] == 1)) {
+                await insert([x + 1, y + 1], [x, y], fromStart + 1.4)
+            }
         }
         return null;
     }
