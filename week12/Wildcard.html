@@ -1,7 +1,8 @@
 <script>
+    // todo 带？的kmp算法
     function find(source, pattern) {
         let startCount = 0;
-        for (let i = 0; i < pattern.length; i++) {
+        for (let i = 0; i < source.length; i++) {
             if (pattern[i] === '*') {
                 startCount++;
             }
@@ -11,7 +12,7 @@
             if (source.length !== pattern.length) {
                 return false;
             }
-            for (let i = 0; i < source.length; i++) {
+            for (let i = 0; i < pattern.length; i++) {
                 if (source[i] !== pattern[i] && pattern[i] !== '?') {
                     return false;
                 }
@@ -20,32 +21,37 @@
         }
 
         let i = 0;
-        let lastIndex = 0;
         for (; pattern[i] !== '*'; i++) {
             if (source[i] !== pattern[i] && pattern[i] !== '?') {
                 return false;
             }
         }
 
-        lastIndex = i;
-        for (let s = 0; s < startCount - 1; s++) {
+        let lastIndex = i;
+        for (let j = 0; j < startCount - 1; j++) {
             i++;
-            let subPattern = ''
+            let subscribe = '';
             while (pattern[i] !== '*') {
-                subPattern = subPattern + source[i];
-                i++
+                subscribe = subscribe + pattern[i];
+                i++;
             }
-            let reg = new RegExp(subPattern.replace(/\?/g, '[\\s\\S]'));
-            reg.lastIndex = lastIndex
-            reg.exec(source)
-            lastIndex = reg.lastIndex
+            let reg = new RegExp((subscribe.replace(/\?/g, '[\\s\\S]')), 'g');
+            reg.lastIndex = lastIndex;
+            let res = reg.exec(source);
+            if (!res) {
+                return false;
+            }
+            lastIndex = reg.lastIndex;
         }
 
-        for (let p = 0; p <= source.length - lastIndex && pattern[pattern.length - p] !== '*'; p++) {
-            if (source[source.length - p] !== pattern[pattern.length - p] && pattern[source.length - p] !== '?') {
-                return false
+        // 最后的一个* 号，匹配多个字符
+        for (let p = 1; p < (source.length - lastIndex) && pattern[pattern.length - p] !== '*'; p++) {
+            console.log(source[source.length - p], pattern[pattern.length - p])
+            if (source[source.length - p] !== pattern[pattern.length - p] && pattern[pattern.length - p] !== '?') {
+                return false;
             }
         }
-        return true
+        return true;
     }
+    console.log(find('abccdebcddddd', 'ab*cd?bc*dd'))
 </script>
