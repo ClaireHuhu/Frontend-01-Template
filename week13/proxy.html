@@ -2,10 +2,20 @@
     let handlers = new Map();
     let usedReactivities = [];
 
+    let reactivities = new Map();//对于同样的obj，返回同一个reactive，而不是创建新的
+
     function reactive(obj) {
-        return new Proxy(obj, {
+        if(reactivities.get(obj)) {
+            return reactivities.get(obj)
+        }
+        let proxy = new Proxy(obj, {
             get: function(obj, prop) {
                 usedReactivities.push([obj, prop])
+
+                // 处理case2的情况
+                if(typeof obj[prop] === "object") {
+                    return reactive(obj[prop])
+                }
                 return obj[prop]
             },
             set: function(obj, prop, newVal) {
@@ -15,32 +25,54 @@
                 }
             }
         })
+        reactivities.set(obj,proxy);
+        reactivities.set(proxy, proxy);  // ????
+        return proxy
     }
 
     function effect(handler) {
         usedReactivities = [];
         handler();
+        // 依赖收集
         for (let reactive of usedReactivities) {
             let [obj, prop] = reactive;
-            if (!handlers.get(obj)) {
-                handlers.set(obj, {})
+            if (!handlers.has(obj)) {
+                handlers.set(obj, new Map())
             }
-            if (!handlers.get(obj)[prop]) {
-                handlers.get(obj)[prop] = []
+            if (!handlers.get(obj).has(prop)) {
+                handlers.get(obj).set(prop,[]);
             }
-            handlers.get(obj)[prop].push(handler);
+            handlers.get(obj).get(prop).push(handler);
         }
     }
 
-    let p1 = reactive({
-        a: 1
-    });
-    let test;
+    // ---------case 1---------
+    // let p1 = reactive({
+    //     a: 1
+    // });
+    // let test;
 
-    effect(() => {
-        test = p1.a;
-    });
+    // effect(() => {
+    //     test = p1.a;
+    // });
 
-    p1.a = 3;
-    console.log(test);
+    // p1.a = 3;
+    // console.log(test);
+
+    // --------case 2----------
+    // let p1 = reactive({
+    //     a: {
+    //         b:1
+    //     }
+    // });
+    // let test;
+
+    // effect(() => {
+    //     test = p1.a.b;
+    // });
+
+    // p1.a.b = 3;
+    // console.log(test);
+
+
 </script>
