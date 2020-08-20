@@ -1,32 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <input type="range" min="0" max="255" step="1" id="r">
+    <input type="range" min="0" max="255" step="1" id="g">
+    <input type="range" min="0" max="255" step="1" id="b">
+    <div id="color" style="width: 100px;height: 100px;"></div>
+</body>
 <script>
     let handlers = new Map();
     let usedReactivities = [];
 
-    let reactivities = new Map();//对于同样的obj，返回同一个reactive，而不是创建新的
+    let reactivities = new Map(); //对于同样的obj，返回同一个reactive，而不是创建新的
 
     function reactive(obj) {
-        if(reactivities.get(obj)) {
+        if (reactivities.get(obj)) {
             return reactivities.get(obj)
         }
         let proxy = new Proxy(obj, {
-            get: function(obj, prop) {
+            get: function (obj, prop) {
                 usedReactivities.push([obj, prop])
 
                 // 处理case2的情况
-                if(typeof obj[prop] === "object") {
+                if (typeof obj[prop] === "object") {
                     return reactive(obj[prop])
                 }
                 return obj[prop]
             },
-            set: function(obj, prop, newVal) {
+            set: function (obj, prop, newVal) {
                 obj[prop] = newVal;
-                for (let i = 0; i < handlers.get(obj)[prop].length; i++) {
-                    handlers.get(obj)[prop][i]();
+                for (let i = 0; i < handlers.get(obj).get(prop).length; i++) {
+                    handlers.get(obj).get(prop)[i]();
                 }
             }
         })
-        reactivities.set(obj,proxy);
-        reactivities.set(proxy, proxy);  // ????
+        reactivities.set(obj, proxy);
+        reactivities.set(proxy, proxy); // ????
         return proxy
     }
 
@@ -40,7 +55,7 @@
                 handlers.set(obj, new Map())
             }
             if (!handlers.get(obj).has(prop)) {
-                handlers.get(obj).set(prop,[]);
+                handlers.get(obj).set(prop, []);
             }
             handlers.get(obj).get(prop).push(handler);
         }
@@ -74,5 +89,25 @@
     // p1.a.b = 3;
     // console.log(test);
 
-
+    let p = reactive({
+        r: 100,
+        g: 100,
+        b: 100
+    });
+    let color;
+    
+    effect(() => {
+        document.getElementById('color').style.background = `rgb(${p.r},${p.g},${p.b})`
+    })
+    document.getElementById("r").addEventListener("input", event => {
+        p.r = event.target.value
+    })
+    document.getElementById("g").addEventListener("input", event => {
+        p.g = event.target.value
+    })
+    document.getElementById("b").addEventListener("input", event => {
+        p.b = event.target.value
+    })
 </script>
+
+</html>
