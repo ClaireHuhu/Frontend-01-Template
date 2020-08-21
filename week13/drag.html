@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<style>
+    #container {
+        user-select: none;
+    }
+</style>
+<body>
+    <div id='dragable' style="width: 100px;height: 100px;display: inline-block;background: pink;"></div>
+</body>
+<script>
+    let startX = 0;
+    let startY = 0;
+    let moveX = 0;
+    let moveY = 0;
+    let lastX = 0;
+    let lastY = 0;
+    let rangeList = [];
+
+    let move = (e) => {
+        moveX = lastX + e.clientX - startX;
+        moveY = lastY + e.clientY - startY;
+
+        document.getElementById('dragable').style.transform = `translate(${moveX}px,${moveY}px)`;
+    }
+    let up = (e) => {
+        lastX = moveX
+        lastY = moveY
+        document.removeEventListener('mousemove', move);
+        document.removeEventListener('mouseup', up);
+    }
+
+    document.getElementById('dragable').addEventListener('mousedown', function (e) {
+        startX = e.clientX;
+        startY = e.clientY;
+        document.addEventListener('mousemove', move)
+        document.addEventListener('mouseup', up)
+    })
+
+</script>
+
+</html>
