@@ -12,26 +12,30 @@
     }
 </style>
 <body>
+    <div id='container'>文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字文字</div>
     <div id='dragable' style="width: 100px;height: 100px;display: inline-block;background: pink;"></div>
 </body>
 <script>
-    let startX = 0;
-    let startY = 0;
-    let moveX = 0;
-    let moveY = 0;
-    let lastX = 0;
-    let lastY = 0;
+    // let startX = 0;
+    // let startY = 0;
+    // let moveX = 0;
+    // let moveY = 0;
+    // let lastX = 0;
+    // let lastY = 0;
     let rangeList = [];
 
     let move = (e) => {
-        moveX = lastX + e.clientX - startX;
-        moveY = lastY + e.clientY - startY;
+        // moveX = lastX + e.clientX - startX;
+        // moveY = lastY + e.clientY - startY;
+        let range = nearest(e.clientX,e.clientY);
 
-        document.getElementById('dragable').style.transform = `translate(${moveX}px,${moveY}px)`;
+        range.insertNode(document.getElementById('dragable'))
+
+        // document.getElementById('dragable').style.transform = `translate(${moveX}px,${moveY}px)`;
     }
     let up = (e) => {
-        lastX = moveX
-        lastY = moveY
+        // lastX = moveX
+        // lastY = moveY
         document.removeEventListener('mousemove', move);
         document.removeEventListener('mouseup', up);
     }
@@ -43,6 +47,28 @@
         document.addEventListener('mouseup', up)
     })
 
+    let node = document.getElementById('container').childNodes[0]
+    for (let i = 0; i < node.textContent.length; i++) {
+        let range = new Range();
+        range.setStart(node,i);
+        range.setEnd(node,i);
+        rangeList.push(range)
+    }
+
+    function nearest(x0,y0) {
+        let minDistance = Infinity;
+        let range;
+
+        for(let i = 0;i<rangeList.length;i++) {
+            let {x,y} = rangeList[i].getBoundingClientRect();
+            let distance = (x-x0)**2 + (y-y0)**2;
+            if(distance < minDistance) {
+                minDistance = distance;
+                range = rangeList[i]
+            } 
+        }
+        return range;
+    }
 </script>
 
 </html>
