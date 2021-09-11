@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<style>
+    .carousel {
+        /* overflow: hidden; */
+        width: 500px;
+        height: 300px;
+        outline: 1px solid red;
+        zoom: 0.25;   
+        white-space: nowrap;  
+    }
+    .carousel img {
+        width: 500px;
+        height: 300px;
+    }
+</style>
+<body>
+    <div id='container'></div>
+</body>
+
+<script>
+class Carousel {
+    constructor() {
+        this.root = null;
+        this.data = null;
+    }
+    render() {
+        this.root = document.createElement('div');
+        this.root.classList.add('carousel')
+        
+        for(let d of this.data) {
+            let element = document.createElement('img')
+            element.src = d;
+            this.root.appendChild(element)
+        }
+
+        let position = 0;
+
+        let nextPic = () => {
+            let nextPosition = (position + 1) % this.data.length;
+
+            let current = this.root.childNodes[position];
+            let next = this.root.childNodes[nextPosition];
+          
+            // **** 移动之前，先0秒快速移动到对应位置，准备动画移动
+            current.style.transition = "ease 0s"
+            next.style.transition = "ease 0s"
+
+            current.style.transform = `translatex(${- 100 * position}%)`
+            next.style.transform =  `translatex(${100 - 100 * nextPosition}%)`
+
+            setTimeout(function(){
+                current.style.transition = "ease 0.5s"
+                next.style.transition = "ease 0.5s"
+
+                current.style.transform = `translatex(${-100 - 100 * position}%)`
+                next.style.transform =  `translatex(${ - 100 * nextPosition}%)`
+
+                position = nextPosition;
+            },16) //**** 16毫秒
+          
+            // ****用requestAnimationFrame，需要嵌套两层，
+            // ****第一层是保证上面执行完毕之后，第二层在下一帧时进行移动
+            // requestAnimationFrame(function(){
+            //     requestAnimationFrame(function(){
+            //         current.style.transition = "ease 0.5s"
+            //         next.style.transition = "ease 0.5s"
+        
+            //         current.style.transform = `translatex(${-100 - 100 * position}%)`
+            //         next.style.transform =  `translatex(${ - 100 * nextPosition}%)`
+        
+            //         position = nextPosition;
+            //     })
+            // })
+          
+            
+            setTimeout(nextPic, 3000)
+        }
+        nextPic()
+    }
+}
+
+let carousel = new Carousel();
+carousel.data = [
+  "https://static001.geekbang.org/resource/image/bb/21/bb38fb7c1073eaee1755f81131f11d21.jpg",
+  "https://static001.geekbang.org/resource/image/1b/21/1b809d9a2bdf3ecc481322d7c9223c21.jpg",
+  "https://static001.geekbang.org/resource/image/b6/4f/b6d65b2f12646a9fd6b8cb2b020d754f.jpg",
+  "https://static001.geekbang.org/resource/image/73/e4/730ea9c393def7975deceb48b3eb6fe4.jpg",
+]
+carousel.render(); 
+
+document.getElementById('container').appendChild(carousel.root)
+</script>
+
+</html>
