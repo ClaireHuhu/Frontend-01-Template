@@ -1,0 +1,18 @@
+<template>
+    <div>
+        <img />
+    </div>
+</template>
+<script>
+  export default{
+      el: '#example',
+      data: {
+          message: 'Hello'
+      },
+      computed: {
+          reverseMessage: function(){
+              return this.message.split('').reverse().join('')
+          }
+      }
+  }
+</script>
