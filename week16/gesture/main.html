@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<style type="text/css">
+    html,body {
+        height: 100%;
+    }
+</style>
+<body>
+    <div id="my" style="transform: translate(0px, 0px); width: 100px; height: 100px; background: lightgoldenrodyellow"></div>
+</body>
+<script src="./gesture.js"></script>
+<script>
+    window.addEventListener('contextmenu', event => event.preventDefault())
+    document.addEventListener('selectstart', event => event.preventDefault())
+    document.addEventListener('touchmove', event => event.preventDefault(),{passive:false})
+
+    enableGesture(document.body);
+    let x = 0,y = 0;
+    let my = document.getElementById('my');
+
+    document.body.addEventListener('pan', event=>{
+        console.log('x', x + event.clientX - event.startX)
+        console.log('y', y + event.clientY - event.startY)
+        my.style.transform = `translate(${x + event.clientX - event.startX}px,${y + event.clientY - event.startY}px)`
+    })
+
+    document.body.addEventListener('panend', event=>{
+        x = x + event.clientX - event.startX;
+        y = y + event.clientY - event.startY;
+        my.style.transform = `translate(${x + event.clientX - event.startX}px,${y + event.clientY - event.startY}px)`
+    })
+    
+</script>
+</html>
