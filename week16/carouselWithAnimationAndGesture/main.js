@@ -1,4 +1,5 @@
 import {Carousel} from './lib/carousel.js'
+import {create, Wrapper, Text} from './lib/createElements.js'
 
 let imgList = [
     'https://static001.geekbang.org/resource/image/bb/21/bb38fb7c1073eaee1755f81131f11d21.jpg', 
