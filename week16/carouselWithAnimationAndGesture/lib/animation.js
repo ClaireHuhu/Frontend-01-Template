@@ -4,7 +4,7 @@ export class Timeline {
         this.finishedAnimations = new Set(); //** 用于存放完成的Animation对象
         this.addTimes = new Map(); //**  单独提出来一个map,用对应的animation作为map的key
         this.requestId = null; // 记录id
-        this.state = "inited";
+        this.state = "init";
         this.tick = () => {
             let t = Date.now() - this.startTime; // 获得当前时刻
           
@@ -47,7 +47,7 @@ export class Timeline {
         }
     }
     start () {
-        if (this.state !== 'inited') {
+        if (this.state !== 'init') {
             return;
         }
         this.state = 'playing'

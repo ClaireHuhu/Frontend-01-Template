@@ -1,42 +1,53 @@
 export class Timeline {
     constructor() {
-        this.animations = [];
+        this.animations = new Set(); //** 改为set，因为不断的加入Animation对象
+        this.finishedAnimations = new Set(); //** 用于存放完成的Animation对象
+        this.addTimes = new Map(); //**  单独提出来一个map,用对应的animation作为map的key
         this.requestId = null; // 记录id
-        this.state = "inited";
+        this.state = "init";
         this.tick = () => {
             let t = Date.now() - this.startTime; // 获得当前时刻
-            let animations = this.animations.filter(animation => !animation.finished) // 筛选出没有完结的animation
-    
-            for (let animation of animations) {
-                let {object, property, template, start, end, timingFunction, duration, delay, addTime} = animation
+          
+            for (let animation of this.animations) {
+                let {object, property, template, start, end, timingFunction, duration, delay} = animation
+                let addTime = this.addTimes.get(animation)
+                
+                if(t < delay + addTime) {  //**  当前的animation没有到触发的时刻，continue下一个animation
+                    continue;
+                }
+
                 let progression = timingFunction((t - delay - addTime)/duration);  // 0- 1 之间的数
-    
+
                 if(t > duration + delay + addTime) { // 已经结束的动画，强制设置progresson为1，finished为true
                     progression = 1;
-                    animation.finished = true;
+                    this.animations.delete(animation);
+                    this.finishedAnimations.add(animation)
                 } 
     
                 let value = animation.valueFromProgression(progression);  // value 就是根据progression 算出来的当前值
-    
                 object[property] = template(value)  // 通过timingFunction获当前位置，当前位置作为修改属性值的入参
             }
     
-            if(animations.length) { // 还有没有执行的动画时，才执行，优化性能
+            if(this.animations.size) { // 还有没有执行的动画时，才执行，优化性能
                 this.requestId = requestAnimationFrame(this.tick)
+            } else {
+                this.requestId = null;
             }
         }
     }
     add (animation, addTime) {
-        this.animations.push(animation)
-        animation.finished = false;
+        this.animations.add(animation)
+        if(this.state == 'playing' && this.requestId == null) {//** 改成先start，后add,因为之前start了，requestId没有，所以在这种情况下再触发一次
+            this.tick()
+        }
         if(this.state == 'playing') {
-            animation.addTime = addTime !== void 0 ? addTime : Date.now() - this.startTime
+            this.addTimes.set(animation,addTime !== void 0 ? addTime : Date.now() - this.startTime)
         } else {
-            animation.addTime = addTime !== void 0 ? addTime : 0
+            this.addTimes.set(animation,addTime !== void 0 ? addTime : 0)
         }
     }
     start () {
-        if (this.state !== 'inited') {
+        if (this.state !== 'init') {
             return;
         }
         this.state = 'playing'
@@ -65,17 +76,29 @@ export class Timeline {
         if (this.state === "playing") {
             this.pause();
         }
-        this.animations = [];
-        this.requestID = null;
-        this.state = "inited";
+        for (const animation of this.finishedAnimations) { //** 重新开始，已经结束的放回到animations中
+            this.animations.add(animation)
+        }
+        this.finishedAnimations = new Set();
+        this.requestId = null;
+        this.state = "playing";
         this.startTime = Date.now();
         this.pauseTime = null;
         this.tick();
     }
+    reset() {
+        this.animations = new Set();
+        this.finishedAnimations = new Set();
+        this.addTimes  = new Map()
+        this.requestId = null;
+        this.state = 'init';
+        this.startTime = Date.now();
+        this.pauseTime = null;
+    }
 }
 
 export class Animation {
-    constructor(object, property, template,start, end, duration, delay, timingFunction) {
+    constructor(object, property,start, end, duration, delay, timingFunction, template) {
         this.object = object; // style对象
         this.property = property; // 修改的style 属性名
         this.template = template;  // 修改style属性值的模板函数（传入值，修改属性值）

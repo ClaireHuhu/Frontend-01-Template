@@ -1,3 +1,4 @@
+import { enableGesture } from "./gesture";
 export class Wrapper {
     constructor(type) {
       this.children = []
@@ -5,6 +6,15 @@ export class Wrapper {
     }
     setAttribute(name, value) {
       this.root.setAttribute(name, value)
+
+      if (name.match(/^on([\s\S]+)$/)) {
+        let eventName = RegExp.$1.replace(/^[\s\S]/, c => c.toLowerCase());
+        this.addEventListener(eventName, value)
+      }
+
+      if (name === 'enableGesture') {
+        enableGesture(this.root)
+      }
     }
     appendChild(child) {
       this.children.push(child)
